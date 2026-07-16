@@ -1,7 +1,8 @@
 import streamlit as st
 
 # --- 1. TITEL & DESIGN ---
-st.set_page_config(page_title="Privater Notenrechner", page_icon="🎓", layout="centered")
+# Wir sagen Streamlit, dass es die Bilddatei "logo.png" als Icon nutzen soll
+st.set_page_config(page_title="Privater Notenrechner", page_icon="logo.png", layout="centered")
 st.title("Schul-Notenrechner")
 st.write("Verwalte deine Fächer, trage deine Noten ein – komplett privat in deinem Browser!")
 
@@ -46,11 +47,17 @@ if st.button("Fach hinzufügen", use_container_width=True):
         else:
             typ = "ja" if ist_hauptfach == "Hauptfach" else "nein"
 
+            # Fach im privaten Speicher anlegen
             st.session_state.noten_buch[sauberer_name] = {
                 "typ": typ,
                 "gross": [],
                 "klein": []
             }
+
+            # --- DIESE ZEILE NEU HINZUFÜGEN: ---
+            # Wir leeren das Textfeld im Speicher, bevor die Seite neu lädt!
+            st.session_state.neues_fach_input = ""
+
             st.success(f"Fach '{sauberer_name}' wurde hinzugefügt!")
             st.rerun()
     else:
