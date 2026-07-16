@@ -14,7 +14,7 @@ st.set_page_config(page_title="Privater Notenrechner", page_icon=app_icon, layou
 # Wir sagen Safari im Hintergrund direkt, wo das Bild liegt
 st.markdown(
     """
-    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/DEIN_GITHUB_NAME/DEIN_REPOSITORY_NAME/main/logo.png">
+    <link rel="apple-touch-icon" href="https://github.com/jonasfeneberg-sys/mein-notenrechner/blob/4208bde4c2bbc19ad09e454dc951a29eccc25212/logo.png">
     """,
     unsafe_allow_html=True
 )
