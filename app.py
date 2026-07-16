@@ -1,10 +1,15 @@
 import streamlit as st
+from PIL import Image  # <-- Das laden wir neu herbei!
+
+# Wir laden das Bild direkt als echtes Bild-Objekt
+try:
+    app_icon = Image.open("logo.png")
+except Exception:
+    app_icon = "🎓"  # Falls das Bild mal fehlt, nehmen wir das Emoji als Backup
 
 # --- 1. TITEL & DESIGN ---
-# Wir sagen Streamlit, dass es die Bilddatei "logo.png" als Icon nutzen soll
-st.set_page_config(page_title="Privater Notenrechner", page_icon= "logo.png", layout="centered")
-st.title("Schul-Notenrechner")
-st.write("Verwalte deine Fächer, trage deine Noten ein – komplett privat in deinem Browser!")
+# Jetzt übergeben wir das geladene Bild-Objekt direkt an Streamlit
+st.set_page_config(page_title="Privater Notenrechner", page_icon=app_icon, layout="centered")
 
 # --- 2. ISOLIERTER SPEICHER FÜR DIESEN TAB ---
 if "noten_buch" not in st.session_state:
