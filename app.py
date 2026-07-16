@@ -2,7 +2,7 @@ import streamlit as st
 
 # --- 1. TITEL & DESIGN ---
 # Wir sagen Streamlit, dass es die Bilddatei "logo.png" als Icon nutzen soll
-st.set_page_config(page_title="Privater Notenrechner", page_icon="logo.png", layout="centered")
+st.set_page_config(page_title="Privater Notenrechner", page_icon= "logo.png", layout="centered")
 st.title("Schul-Notenrechner")
 st.write("Verwalte deine Fächer, trage deine Noten ein – komplett privat in deinem Browser!")
 
