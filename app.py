@@ -32,13 +32,19 @@ def loesch_bestaetigung(fach_name):
 # --- 3. BEREICH: NEUES FACH HINZUFÜGEN ---
 st.header("+ Neues Fach hinzufügen")
 
-col1, col2 = st.columns([2, 1])
-with col1:
-    neues_fach = st.text_input("Name des Fachs", placeholder="z. B. Mathe, Deutsch...", key="neues_fach_input")
-with col2:
-    ist_hauptfach = st.radio("Fach-Typ:", ["Hauptfach", "Nebenfach"])
+# Wir packen die Eingabe in ein Formular. Das leert das Textfeld nach dem Klick automatisch und verhindert Abstürze!
+with st.form("fach_formular", clear_on_submit=True):
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        # Kein 'key' mehr nötig, da "clear_on_submit=True" das Feld für uns leert!
+        neues_fach = st.text_input("Name des Fachs", placeholder="z. B. Mathe, Deutsch...")
+    with col2:
+        ist_hauptfach = st.radio("Fach-Typ:", ["Hauptfach", "Nebenfach"])
 
-if st.button("Fach hinzufügen", use_container_width=True):
+    # Der Absende-Knopf für das Formular
+    submit_button = st.form_submit_button("Fach hinzufügen", use_container_width=True)
+
+if submit_button:
     sauberer_name = neues_fach.strip()
 
     if sauberer_name:
@@ -53,13 +59,8 @@ if st.button("Fach hinzufügen", use_container_width=True):
                 "gross": [],
                 "klein": []
             }
-
-            # --- DIESE ZEILE NEU HINZUFÜGEN: ---
-            # Wir leeren das Textfeld im Speicher, bevor die Seite neu lädt!
-            st.session_state.neues_fach_input = ""
-
             st.success(f"Fach '{sauberer_name}' wurde hinzugefügt!")
-            st.rerun()
+            st.rerun()  # Seite lädt fehlerfrei mit leerem Feld neu!
     else:
         st.warning("Bitte gib zuerst einen Namen für das Fach ein!")
 
