@@ -8,12 +8,16 @@ except Exception:
     app_icon = "🎓"  # Falls das Bild mal fehlt, nehmen wir das Emoji als Backup
 
 # --- 1. TITEL & DESIGN ---
-# Jetzt übergeben wir das geladene Bild-Objekt direkt an Streamlit
 st.set_page_config(page_title="Privater Notenrechner", page_icon=app_icon, layout="centered")
 
-# --- 2. ISOLIERTER SPEICHER FÜR DIESEN TAB ---
-if "noten_buch" not in st.session_state:
-    st.session_state.noten_buch = {}
+# --- DIESEN BLOCK NEU HINZUFÜGEN: Der Apple-Icon-Trick ---
+# Wir sagen Safari im Hintergrund direkt, wo das Bild liegt
+st.markdown(
+    """
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/DEIN_GITHUB_NAME/DEIN_REPOSITORY_NAME/main/logo.png">
+    """,
+    unsafe_allow_html=True
+)
 
 
 # --- NEUE FUNKTION FÜR DAS BESTÄTIGUNGS-FENSTER ---
