@@ -8,7 +8,7 @@ except Exception:
     app_icon = "🎓"
 
 # --- 1. TITEL & DESIGN ---
-st.set_page_config(page_title="Privater Notenrechner", page_icon=app_icon, layout="centered")
+st.set_page_config(page_title="Notenrechner", page_icon=app_icon, layout="centered")
 
 # CSS ohne Kommentare (verhindert Darstellungsfehler)
 st.markdown(
