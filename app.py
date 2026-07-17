@@ -10,7 +10,6 @@ except Exception:
 # --- 1. TITEL & DESIGN ---
 st.set_page_config(page_title="Notenrechner", page_icon=app_icon, layout="centered")
 
-# Sicherer Design-Block ohne jegliche Stolperstellen für Streamlit
 st.html("""
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jonasfeneberg-sys/mein-notenrechner/main/logo.png">
     <style>
@@ -33,6 +32,7 @@ st.html("""
     </style>
 """)
 
+
 # --- FUNKTION: SCHNITTBERECHNUNG ---
 def get_schnitt_wert(fach_daten):
     grosse = fach_daten.get("gross", [])
@@ -42,7 +42,7 @@ def get_schnitt_wert(fach_daten):
         return 7.0
     if ist_hauptfach:
         if grosse and kleine:
-            return round(((sum(grosse)/len(grosse) * 2) + sum(kleine)/len(kleine)) / 3, 2)
+            return round(((sum(grosse) / len(grosse) * 2) + sum(kleine) / len(kleine)) / 3, 2)
         elif grosse:
             return round(sum(grosse) / len(grosse), 2)
         else:
@@ -52,15 +52,17 @@ def get_schnitt_wert(fach_daten):
             return round(sum(kleine) / len(kleine), 2)
         return 7.0
 
+
 # --- SPEICHER INITIALISIEREN ---
 if "noten_buch" not in st.session_state:
     st.session_state.noten_buch = {}
 if "active_subject" not in st.session_state:
     st.session_state.active_subject = None
 
+
 @st.dialog("Fach löschen?")
 def loesch_bestaetigung(fach_name):
-    st.write(f"Bist du dir sicher, dass du das Fach *'{fach_name}'* mit allen Noten löschen willst?")
+    st.write(f"Bist du dir wirklich sicher, dass du das Fach *'{fach_name}'* mit allen Noten löschen willst?")
     col_ja, col_nein = st.columns(2)
     with col_ja:
         if st.button("Ja, löschen", type="primary", use_container_width=True):
@@ -72,29 +74,31 @@ def loesch_bestaetigung(fach_name):
         if st.button("Abbrechen", use_container_width=True):
             st.rerun()
 
+
 # --- ANSICHT 1: DAS DASHBOARD ---
 if st.session_state.active_subject is None:
-    st.title("Mein Notenrechner")
+    st.title(" Mein Notenrechner")
     alle_schnitte = [get_schnitt_wert(d) for f, d in st.session_state.noten_buch.items() if get_schnitt_wert(d) != 7.0]
     if alle_schnitte:
         with st.container(border=True):
-            st.metric(label="Aktueller Gesamtschnitt", value=f"{sum(alle_schnitte) / len(alle_schnitte):.2f}")
+            st.metric(label=" Aktueller Gesamtschnitt", value=f"{sum(alle_schnitte) / len(alle_schnitte):.2f}")
     else:
         st.info("Trage in mindestens einem Fach Noten ein, um deinen Gesamtschnitt zu sehen.")
 
     st.markdown("---")
-    st.subheader("Meine Fächer")
+    st.subheader(" Meine Fächer")
     if not st.session_state.noten_buch:
         st.info("Noch keine Fächer angelegt. Erstelle dein erstes Fach weiter unten!")
     else:
         sortierte_faecher = sorted(st.session_state.noten_buch.items(), key=lambda x: get_schnitt_wert(x[1]))
-        cols = st.columns(2)
-        for index, (fach_name, daten) in enumerate(sortierte_faecher):
-            col = cols[index % 2]
+
+        for fach_name, daten in sortierte_faecher:
             schnitt = get_schnitt_wert(daten)
             anzeige_schnitt = "-.-" if schnitt == 7.0 else f"{schnitt:.2f}"
             emoji = "📖" if schnitt == 7.0 else ("⭐" if schnitt <= 2.0 else "📝")
-            if col.button(f"{emoji} {fach_name}\nSchnitt: {anzeige_schnitt}", key=f"kachel_{fach_name}", use_container_width=True):
+
+            if st.button(f"{emoji} {fach_name}   ·   Schnitt: {anzeige_schnitt}", key=f"kachel_{fach_name}",
+                         use_container_width=True):
                 st.session_state.active_subject = fach_name
                 st.rerun()
 
@@ -109,7 +113,8 @@ if st.session_state.active_subject is None:
             if sauberer_name in st.session_state.noten_buch:
                 st.error(f"Das Fach '{sauberer_name}' gibt es bereits!")
             elif sauberer_name:
-                st.session_state.noten_buch[sauberer_name] = {"typ": "ja" if ist_hauptfach == "Hauptfach" else "nein", "gross": [], "klein": []}
+                st.session_state.noten_buch[sauberer_name] = {"typ": "ja" if ist_hauptfach == "Hauptfach" else "nein",
+                                                              "gross": [], "klein": []}
                 st.success(f"Fach '{sauberer_name}' wurde hinzugefügt!")
                 st.rerun()
             else:
@@ -138,28 +143,29 @@ else:
         st.write("*Große Note hinzufügen (Schulaufgabe):*")
         cols_g = st.columns(6)
         for i in range(1, 7):
-            if cols_g[i-1].button(f"*{i}*", key=f"dg_{i}", use_container_width=True):
+            if cols_g[i - 1].button(f"*{i}*", key=f"dg_{i}", use_container_width=True):
                 fach_daten["gross"].append(i)
                 st.rerun()
         st.write("")
         st.write("*Kleine Note hinzufügen (Ex/Abfrage/Mündlich):*")
         cols_k = st.columns(6)
         for i in range(1, 7):
-            if cols_k[i-1].button(f"*{i}*", key=f"dk_{i}", use_container_width=True):
+            if cols_k[i - 1].button(f"*{i}*", key=f"dk_{i}", use_container_width=True):
                 fach_daten["klein"].append(i)
                 st.rerun()
     else:
         st.write("*Kleine Note hinzufügen:*")
         cols_n = st.columns(6)
         for i in range(1, 7):
-            if cols_n[i-1].button(f"*{i}*", key=f"dn_{i}", use_container_width=True):
+            if cols_n[i - 1].button(f"*{i}*", key=f"dn_{i}", use_container_width=True):
                 fach_daten["klein"].append(i)
                 st.rerun()
 
     st.markdown("---")
     st.subheader("Eingetragene Noten verwalten")
     if fach_daten["typ"] == "ja":
-        st.markdown('<div class="note-card-gross"><p class="card-title-gross">📘 Große Noten (Schulaufgaben)</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="note-card-gross"><p class="card-title-gross">📘 Große Noten (Schulaufgaben)</p></div>',
+                    unsafe_allow_html=True)
         if not fach_daten["gross"]:
             st.info("Keine großen Noten eingetragen.")
         for index, note in enumerate(fach_daten["gross"]):
@@ -169,7 +175,9 @@ else:
                 fach_daten["gross"].pop(index)
                 st.rerun()
 
-    st.markdown('<div class="note-card-klein"><p class="card-title-klein">🟢 Kleine Noten (Exen, Mündlich, etc.)</p></div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="note-card-klein"><p class="card-title-klein">🟢 Kleine Noten (Exen, Mündlich, etc.)</p></div>',
+        unsafe_allow_html=True)
     if not fach_daten["klein"]:
         st.info("Keine kleinen Noten eingetragen.")
     for index, note in enumerate(fach_daten["klein"]):
@@ -181,5 +189,5 @@ else:
 
     st.markdown("---")
     st.markdown("##### Achtung!")
-    if st.button(f"Ganzes Fach '{fach_name}' unwiderruflich löschen", use_container_width=True, type="secondary"):
+    if st.button(f"Ganzes Fach ' {fach_name} ' unwiderruflich löschen", use_container_width=True, type="secondary"):
         loesch_bestaetigung(fach_name)
