@@ -60,7 +60,7 @@ if "active_subject" not in st.session_state:
 
 @st.dialog("Fach löschen?")
 def loesch_bestaetigung(fach_name):
-    st.write(f"Bist du dir wirklich sicher, dass du das Fach *'{fach_name}'* mit allen Noten löschen willst?")
+    st.write(f"Bist du dir sicher, dass du das Fach *'{fach_name}'* mit allen Noten löschen willst?")
     col_ja, col_nein = st.columns(2)
     with col_ja:
         if st.button("Ja, löschen", type="primary", use_container_width=True):
@@ -74,16 +74,16 @@ def loesch_bestaetigung(fach_name):
 
 # --- ANSICHT 1: DAS DASHBOARD ---
 if st.session_state.active_subject is None:
-    st.title("🎓 Mein Notenrechner")
+    st.title("Mein Notenrechner")
     alle_schnitte = [get_schnitt_wert(d) for f, d in st.session_state.noten_buch.items() if get_schnitt_wert(d) != 7.0]
     if alle_schnitte:
         with st.container(border=True):
-            st.metric(label="📊 Aktueller Gesamtschnitt", value=f"{sum(alle_schnitte) / len(alle_schnitte):.2f}")
+            st.metric(label="Aktueller Gesamtschnitt", value=f"{sum(alle_schnitte) / len(alle_schnitte):.2f}")
     else:
         st.info("Trage in mindestens einem Fach Noten ein, um deinen Gesamtschnitt zu sehen.")
 
     st.markdown("---")
-    st.subheader("📚 Meine Fächer")
+    st.subheader("Meine Fächer")
     if not st.session_state.noten_buch:
         st.info("Noch keine Fächer angelegt. Erstelle dein erstes Fach weiter unten!")
     else:
@@ -99,7 +99,7 @@ if st.session_state.active_subject is None:
                 st.rerun()
 
     st.markdown("---")
-    st.subheader("➕ Neues Fach hinzufügen")
+    st.subheader("Neues Fach hinzufügen")
     with st.form("fach_formular", clear_on_submit=True):
         col1, col2 = st.columns([2, 1])
         neues_fach = col1.text_input("Name des Fachs", placeholder="z. B. Mathe, Deutsch...")
@@ -128,12 +128,12 @@ else:
 
     st.markdown("---")
     col_titel, col_schnitt = st.columns([2, 1])
-    col_titel.title(f"📖 {fach_name}")
+    col_titel.title(f" {fach_name}")
     col_titel.write(f"Fach-Typ: **{'Hauptfach' if fach_daten['typ'] == 'ja' else 'Nebenfach'}**")
     col_schnitt.metric(label="Aktueller Schnitt", value=anzeige_schnitt)
 
     st.markdown("---")
-    st.subheader("📝 Note hinzufügen")
+    st.subheader("Note hinzufügen")
     if fach_daten["typ"] == "ja":
         st.write("*Große Note hinzufügen (Schulaufgabe):*")
         cols_g = st.columns(6)
@@ -157,7 +157,7 @@ else:
                 st.rerun()
 
     st.markdown("---")
-    st.subheader("🛠️ Eingetragene Noten verwalten")
+    st.subheader("Eingetragene Noten verwalten")
     if fach_daten["typ"] == "ja":
         st.markdown('<div class="note-card-gross"><p class="card-title-gross">📘 Große Noten (Schulaufgaben)</p></div>', unsafe_allow_html=True)
         if not fach_daten["gross"]:
@@ -180,6 +180,6 @@ else:
             st.rerun()
 
     st.markdown("---")
-    st.markdown("##### ⚠️ Gefahrzone")
+    st.markdown("##### Achtung!")
     if st.button(f"Ganzes Fach '{fach_name}' unwiderruflich löschen", use_container_width=True, type="secondary"):
         loesch_bestaetigung(fach_name)
