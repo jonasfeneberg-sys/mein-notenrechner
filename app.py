@@ -10,7 +10,7 @@ except Exception:
 # --- 1. TITEL & DESIGN ---
 st.set_page_config(page_title="Privater Notenrechner", page_icon=app_icon, layout="centered")
 
-# Safari Apple-Icon Trick & ECHTES DARK-THEME CSS (Absolut fehlerfrei ohne Kommentare)
+# CSS ohne Kommentare (verhindert Darstellungsfehler)
 st.markdown(
     """
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jonasfeneberg-sys/mein-notenrechner/main/logo.png">
@@ -66,14 +66,37 @@ st.markdown(
         background-color: #0f172a !important;
     }
 
-    .noten-header {
-        font-size: 1.15rem !important;
+    /* Styling für die Notenkästen (Cards) */
+    .note-card-gross {
+        background-color: #1e293b !important;
+        border: 1px solid #3b82f6 !important; /* Blauer Rahmen für große Noten */
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .note-card-klein {
+        background-color: #1e293b !important;
+        border: 1px solid #10b981 !important; /* Grüner Rahmen für kleine Noten */
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .card-title-gross {
+        color: #3b82f6 !important;
         font-weight: bold !important;
+        font-size: 1.1rem !important;
+        margin-top: 0 !important;
+        margin-bottom: 10px !important;
+    }
+
+    .card-title-klein {
         color: #10b981 !important;
-        margin-top: 15px !important;
-        margin-bottom: 5px !important;
-        border-left: 3px solid #10b981;
-        padding-left: 8px;
+        font-weight: bold !important;
+        font-size: 1.1rem !important;
+        margin-top: 0 !important;
+        margin-bottom: 10px !important;
     }
     </style>
     """,
@@ -105,7 +128,7 @@ def get_schnitt_wert(fach_daten):
         return 7.0
 
 
-# --- 2. SPEICHER INITIALISIEREN ---
+# --- SPEICHER INITIALISIEREN ---
 if "noten_buch" not in st.session_state:
     st.session_state.noten_buch = {}
 if "active_subject" not in st.session_state:
@@ -116,7 +139,6 @@ if "active_subject" not in st.session_state:
 @st.dialog("Fach löschen?")
 def loesch_bestaetigung(fach_name):
     st.write(f"Bist du dir wirklich sicher, dass du das Fach *'{fach_name}'* mit allen Noten löschen willst?")
-    st.write("")
     col_ja, col_nein = st.columns(2)
     with col_ja:
         if st.button("Ja, löschen", type="primary", use_container_width=True):
@@ -133,8 +155,7 @@ def loesch_bestaetigung(fach_name):
 # ANSICHT 1: DAS DASHBOARD
 # =====================================================================
 if st.session_state.active_subject is None:
-
-    st.title(" Mein Notenrechner")
+    st.title("🎓 Mein Notenrechner")
 
     # Gesamtschnitt berechnen
     alle_schnitte = []
@@ -146,17 +167,16 @@ if st.session_state.active_subject is None:
     if alle_schnitte:
         gesamtschnitt_aller_faecher = sum(alle_schnitte) / len(alle_schnitte)
         with st.container(border=True):
-            st.metric(label=" Aktueller Gesamtschnitt", value=f"{gesamtschnitt_aller_faecher:.2f}")
+            st.metric(label="📊 Aktueller Gesamtschnitt", value=f"{gesamtschnitt_aller_faecher:.2f}")
     else:
         st.info("Trage in mindestens einem Fach Noten ein, um deinen Gesamtschnitt zu sehen.")
 
     st.markdown("---")
-    st.subheader(" Meine Fächer")
+    st.subheader("📚 Meine Fächer")
 
     if not st.session_state.noten_buch:
         st.info("Noch keine Fächer angelegt. Erstelle dein erstes Fach weiter unten!")
     else:
-        # Fächer sortieren (Bester Schnitt zuerst)
         sortierte_faecher = sorted(
             st.session_state.noten_buch.items(),
             key=lambda x: get_schnitt_wert(x[1])
@@ -167,7 +187,6 @@ if st.session_state.active_subject is None:
             col = cols[index % 2]
             schnitt = get_schnitt_wert(daten)
 
-            # Hier definieren wir die Variablen sauber VOR der Button-Erstellung
             if schnitt == 7.0:
                 anzeige_schnitt = "-.-"
                 emoji = "📖"
@@ -183,7 +202,7 @@ if st.session_state.active_subject is None:
                     st.rerun()
 
     st.markdown("---")
-    st.subheader(" Neues Fach hinzufügen")
+    st.subheader("➕ Neues Fach hinzufügen")
     with st.form("fach_formular", clear_on_submit=True):
         col1, col2 = st.columns([2, 1])
         with col1:
@@ -227,14 +246,14 @@ else:
     st.markdown("---")
     col_titel, col_schnitt = st.columns([2, 1])
     with col_titel:
-        st.title(f"{fach_name}")
+        st.title(f"📖 {fach_name}")
         typ_text = "Hauptfach" if fach_daten["typ"] == "ja" else "Nebenfach"
         st.write(f"Fach-Typ: **{typ_text}**")
     with col_schnitt:
         st.metric(label="Aktueller Schnitt", value=anzeige_schnitt)
 
     st.markdown("---")
-    st.subheader(" Note hinzufügen")
+    st.subheader("📝 Note hinzufügen")
 
     if fach_daten["typ"] == "ja":
         st.write("*Große Note hinzufügen (Schulaufgabe):*")
@@ -263,32 +282,51 @@ else:
                 st.rerun()
 
     st.markdown("---")
-    st.subheader("Eingetragene Noten verwalten")
+    st.subheader("🛠️ Eingetragene Noten verwalten")
 
+    # KASTEN FÜR GROSSE NOTEN (Nur bei Hauptfächern)
     if fach_daten["typ"] == "ja":
-        st.markdown('<p class="noten-header">Große Noten (Schulaufgaben):</p>', unsafe_allow_html=True)
-        if not fach_daten["gross"]:
-            st.info("Keine großen Noten eingetragen.")
+        with st.container():
+            st.markdown(
+                """
+                <div class="note-card-gross">
+                    <p class="card-title-gross">📘 Große Noten (Schulaufgaben)</p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            if not fach_daten["gross"]:
+                st.info("Keine großen Noten eingetragen.")
+            else:
+                for index, note in enumerate(fach_daten["gross"]):
+                    col_n, col_del = st.columns([5, 1])
+                    col_n.write(f"• Schulaufgabe: **{note}**")
+                    if col_del.button("🗑️", key=f"del_g_{index}", use_container_width=True):
+                        fach_daten["gross"].pop(index)
+                        st.rerun()
+        st.write("")
+
+    # KASTEN FÜR KLEINE NOTEN
+    with st.container():
+        st.markdown(
+            """
+            <div class="note-card-klein">
+                <p class="card-title-klein">🟢 Kleine Noten (Exen, Mündlich, etc.)</p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        if not fach_daten["klein"]:
+            st.info("Keine kleinen Noten eingetragen.")
         else:
-            for index, note in enumerate(fach_daten["gross"]):
-                col_n, col_del = st.columns([4, 1])
-                col_n.write(f"• Schulaufgabe: *{note}*")
-                if col_del.button("🗑️", key=f"del_g_{index}"):
-                    fach_daten["gross"].pop(index)
+            for index, note in enumerate(fach_daten["klein"]):
+                col_n, col_del = st.columns([5, 1])
+                col_n.write(f"• Kleine Note: **{note}**")
+                if col_del.button("🗑️", key=f"del_k_{index}", use_container_width=True):
+                    fach_daten["klein"].pop(index)
                     st.rerun()
 
-    st.markdown('<p class="noten-header">Kleine Noten:</p>', unsafe_allow_html=True)
-    if not fach_daten["klein"]:
-        st.info("Keine kleinen Noten eingetragen.")
-    else:
-        for index, note in enumerate(fach_daten["klein"]):
-            col_n, col_del = st.columns([4, 1])
-            col_n.write(f"• Kleine Note: *{note}*")
-            if col_del.button("🗑️", key=f"del_k_{index}"):
-                fach_daten["klein"].pop(index)
-                st.rerun()
-
     st.markdown("---")
-    st.markdown("##### Achtung!")
+    st.markdown("##### ⚠️ Gefahrzone")
     if st.button(f"Ganzes Fach '{fach_name}' unwiderruflich löschen", use_container_width=True, type="secondary"):
         loesch_bestaetigung(fach_name)
