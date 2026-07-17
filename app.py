@@ -1,62 +1,49 @@
 import streamlit as st
 from PIL import Image
 
-# --- BILD / LOGO LADEN ---
 try:
     app_icon = Image.open("logo.png")
 except Exception:
     app_icon = "🎓"
 
-# --- 1. TITEL & DESIGN ---
 st.set_page_config(page_title="Privater Notenrechner", page_icon=app_icon, layout="centered")
 
-# Safari Apple-Icon Trick & ECHTES DARK-THEME CSS
-# --- 1. TITEL & DESIGN ---
-st.set_page_config(page_title="Privater Notenrechner", page_icon=app_icon, layout="centered")
-
-# Safari Apple-Icon Trick & ECHTES DARK-THEME CSS
 st.markdown(
     """
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jonasfeneberg-sys/mein-notenrechner/main/logo.png">
     <style>
-    /* 1. ERZWINGE DUNKLEN HINTERGRUND FÜR DIE GANZE APP */
     .stApp {
-        background-color: #0f172a !important; /* Sehr dunkles Blau/Grau */
-        color: #f8fafc !important; /* Weißer Text */
+        background-color: #0f172a !important;
+        color: #f8fafc !important;
     }
 
-    /* Labels und Texte weiß färben */
     p, span, label, .stMetric label {
         color: #f8fafc !important;
     }
 
-    /* 2. STYLING FÜR DIE KACHELN (DUNKLES DESIGN) */
     div.stButton > button {
         border-radius: 16px !important;
         padding: 20px 15px !important;
         font-weight: bold !important;
-        background-color: #1e293b !important; /* Etwas helleres Dunkelblau für Kacheln */
+        background-color: #1e293b !important;
         color: #f8fafc !important;
         border: 1px solid #334155 !important;
         transition: all 0.2s ease-in-out !important;
         min-height: 100px !important;
-        white-space: pre-line !important; /* Erlaubt Zeilenumbrüche im Button */
+        white-space: pre-line !important;
     }
 
-    /* Wenn man auf die Kacheln tippt */
     div.stButton > button:hover, div.stButton > button:active, div.stButton > button:focus {
-        border-color: #10b981 !important; /* Grüner Rahmen bei Aktivierung */
+        border-color: #10b981 !important;
         background-color: #0f172a !important;
         color: #10b981 !important;
     }
 
-    /* Input-Felder an das dunkle Design anpassen */
     div[data-baseweb="input"] input {
         background-color: #1e293b !important;
         color: #f8fafc !important;
     }
 
-    /* Rahmen für Formularboxen anpassen */
     div[data-testid="stForm"] {
         border: 1px solid #334155 !important;
         border-radius: 16px !important;
@@ -68,14 +55,13 @@ st.markdown(
 )
 
 
-# --- NEUE FUNKTION: SCHNITTBERECHNUNG & SORTIER-WERT ---
 def get_schnitt_wert(fach_daten):
     grosse = fach_daten.get("gross", [])
     kleine = fach_daten.get("klein", [])
     ist_hauptfach = fach_daten.get("typ") == "ja"
 
     if not grosse and not kleine:
-        return 7.0  # Fächer ohne Noten rutschen nach ganz hinten
+        return 7.0
 
     if ist_hauptfach:
         if grosse and kleine:
@@ -92,14 +78,12 @@ def get_schnitt_wert(fach_daten):
         return 7.0
 
 
-# --- 2. BEREICH: SPEICHER INITIALISIEREN ---
 if "noten_buch" not in st.session_state:
     st.session_state.noten_buch = {}
 if "active_subject" not in st.session_state:
     st.session_state.active_subject = None
 
 
-# Lösch-Bestätigungs-Dialog (Gefahrzone)
 @st.dialog("Fach löschen?")
 def loesch_bestaetigung(fach_name):
     st.write(f"Bist du dir wirklich sicher, dass du das Fach *'{fach_name}'* mit allen Noten löschen willst?")
@@ -108,7 +92,7 @@ def loesch_bestaetigung(fach_name):
     with col_ja:
         if st.button("Ja, löschen", type="primary", use_container_width=True):
             del st.session_state.noten_buch[fach_name]
-            st.session_state.active_subject = None  # Zurücksetzen zur Übersicht nach dem Löschen
+            st.session_state.active_subject = None
             st.toast(f"Fach '{fach_name}' wurde gelöscht!")
             st.rerun()
     with col_nein:
@@ -116,14 +100,9 @@ def loesch_bestaetigung(fach_name):
             st.rerun()
 
 
-# =====================================================================
-# ANSICHT 1: DAS DASHBOARD (Wenn kein Fach angeklickt ist)
-# =====================================================================
 if st.session_state.active_subject is None:
-
     st.title("🎓 Mein Notenrechner")
 
-    # 1. Gesamtschnitt berechnen und anzeigen
     alle_schnitte = []
     for fach, daten in st.session_state.noten_buch.items():
         schnitt = get_schnitt_wert(daten)
@@ -138,27 +117,21 @@ if st.session_state.active_subject is None:
         st.info("Trage in mindestens einem Fach Noten ein, um deinen Gesamtschnitt zu sehen.")
 
     st.markdown("---")
-
-    # 2. Die Kacheln der Fächer (Sortiert nach Schnitt)
     st.subheader("📚 Meine Fächer")
 
     if not st.session_state.noten_buch:
         st.info("Noch keine Fächer angelegt. Erstelle dein erstes Fach weiter unten!")
     else:
-        # Fächer sortieren (Bester Schnitt zuerst)
         sortierte_faecher = sorted(
             st.session_state.noten_buch.items(),
             key=lambda x: get_schnitt_wert(x[1])
         )
 
-        # Grid mit 2 Spalten für die Kacheln auf dem Handy
         cols = st.columns(2)
-
         for index, (fach_name, daten) in enumerate(sortierte_faecher):
-            col = cols[index % 2]  # Verteilt die Kacheln abwechselnd auf Spalte 1 und Spalte 2
+            col = cols[index % 2]
             schnitt = get_schnitt_wert(daten)
 
-            # "-.-" Trick für Fächer ohne Noten
             if schnitt == 7.0:
                 anzeige_schnitt = "-.-"
                 emoji = "📖"
@@ -166,18 +139,14 @@ if st.session_state.active_subject is None:
                 anzeige_schnitt = f"{schnitt:.2f}"
                 emoji = "⭐" if schnitt <= 2.0 else "📝"
 
-            # Kachel-Beschriftung (Zweizeilig)
             kachel_text = f"{emoji} {fach_name}\nSchnitt: {anzeige_schnitt}"
 
-            # Kachel zeichnen
             with col:
                 if st.button(kachel_text, key=f"kachel_{fach_name}", use_container_width=True):
-                    st.session_state.active_subject = fach_name  # Setzt das aktive Fach
-                    st.rerun()  # Lädt die App neu und öffnet die Detailansicht!
+                    st.session_state.active_subject = fach_name
+                    st.rerun()
 
     st.markdown("---")
-
-    # 3. Neues Fach hinzufügen Formular
     st.subheader("➕ Neues Fach hinzufügen")
     with st.form("fach_formular", clear_on_submit=True):
         col1, col2 = st.columns([2, 1])
@@ -206,23 +175,17 @@ if st.session_state.active_subject is None:
             st.warning("Bitte gib zuerst einen Namen für das Fach ein!")
 
 
-# =====================================================================
-# ANSICHT 2: DIE DETAILANSICHT (Wenn ein Fach angeklickt wurde)
-# =====================================================================
 else:
     fach_name = st.session_state.active_subject
     fach_daten = st.session_state.noten_buch[fach_name]
     schnitt = get_schnitt_wert(fach_daten)
     anzeige_schnitt = "-.-" if schnitt == 7.0 else f"{schnitt:.2f}"
 
-    # 1. ZURÜCK BUTTON GANZ OBEN
     if st.button("⬅ Zurück zur Übersicht", use_container_width=True):
         st.session_state.active_subject = None
         st.rerun()
 
     st.markdown("---")
-
-    # Header der Detailansicht
     col_titel, col_schnitt = st.columns([2, 1])
     with col_titel:
         st.title(f"📖 {fach_name}")
@@ -232,8 +195,6 @@ else:
         st.metric(label="Aktueller Schnitt", value=anzeige_schnitt)
 
     st.markdown("---")
-
-    # 2. Noten eintragen per Klick
     st.subheader("📝 Note hinzufügen")
 
     if fach_daten["typ"] == "ja":
@@ -245,8 +206,7 @@ else:
                 st.success(f"Große Note {note_wert} hinzugefügt!")
                 st.rerun()
 
-        st.write("")  # Abstand
-
+        st.write("")
         st.write("*Kleine Note hinzufügen (Ex/Abfrage/Mündlich):*")
         cols_k = st.columns(6)
         for note_wert in range(1, 7):
@@ -255,7 +215,6 @@ else:
                 st.success(f"Kleine Note {note_wert} hinzugefügt!")
                 st.rerun()
     else:
-        # Nebenfach (nur kleine Noten)
         st.write("*Kleine Note hinzufügen:*")
         cols_n = st.columns(6)
         for note_wert in range(1, 7):
@@ -265,8 +224,6 @@ else:
                 st.rerun()
 
     st.markdown("---")
-
-    # 3. Eingetragene Noten verwalten & löschen
     st.subheader("🛠️ Eingetragene Noten verwalten")
 
     if fach_daten["typ"] == "ja":
@@ -293,8 +250,6 @@ else:
                 st.rerun()
 
     st.markdown("---")
-
-    # 4. Gefahrzone (Ganzes Fach löschen)
     st.markdown("##### ⚠️ Gefahrzone")
     if st.button(f"Ganzes Fach '{fach_name}' unwiderruflich löschen", use_container_width=True, type="secondary"):
         loesch_bestaetigung(fach_name)
