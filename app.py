@@ -18,7 +18,10 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
+# --- 2. BEREICH: SPEICHER INITIALISIEREN ---
+# Hier stellen wir sicher, dass das Notenbuch immer existiert, wenn die App startet
+if "noten_buch" not in st.session_state:
+    st.session_state.noten_buch = {}
 
 # --- NEUE FUNKTION FÜR DAS BESTÄTIGUNGS-FENSTER ---
 @st.dialog("Fach löschen?")
