@@ -10,7 +10,9 @@ st.set_page_config(page_title="Privater Notenrechner", page_icon=app_icon, layou
 
 st.markdown(
     """
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jonasfeneberg-sys/mein-notenrechner/main/logo.png">
     <style>
+    /* 1. ERZWINGE DUNKLEN HINTERGRUND FÜR DIE GANZE APP */
     .stApp {
         background-color: #0f172a !important;
         color: #f8fafc !important;
@@ -20,16 +22,34 @@ st.markdown(
         color: #f8fafc !important;
     }
 
-    div.stButton > button {
-        border-radius: 16px !important;
-        padding: 20px 15px !important;
+    /* 2. NUR DIE DASHBOARD-KACHELN GROSS MACHEN */
+    /* Wir nutzen den Selektor für Buttons, die das Wort "Schnitt" oder Emoji im Text haben */
+    div.stButton > button[class*=""] {
+        border-radius: 12px !important;
+        padding: 8px 12px !important; /* Standardmäßig viel flacher und kompakter */
         font-weight: bold !important;
         background-color: #1e293b !important;
         color: #f8fafc !important;
         border: 1px solid #334155 !important;
         transition: all 0.2s ease-in-out !important;
-        min-height: 100px !important;
+    }
+
+    /* Targeten der Fächer-Buttons auf dem Dashboard für das große Kachel-Aussehen */
+    div[data-testid="stHorizontalBlock"] div.stButton > button {
+        padding: 20px 15px !important;
+        min-height: 85px !important; /* Etwas weniger hoch als vorher, damit es kompakter wirkt */
         white-space: pre-line !important;
+    }
+
+    /* 3. DIE MÜLLEIMER-BUTTONS ULTRA COMPACT MACHEN */
+    /* Verhindert, dass die Löschbuttons riesig werden */
+    div.stColumn div.stButton > button {
+        min-height: 32px !important;
+        height: 32px !important;
+        padding: 0px !important;
+        border-radius: 8px !important;
+        font-size: 14px !important;
+        background-color: #1e293b !important;
     }
 
     div.stButton > button:hover, div.stButton > button:active, div.stButton > button:focus {
@@ -47,6 +67,17 @@ st.markdown(
         border: 1px solid #334155 !important;
         border-radius: 16px !important;
         background-color: #0f172a !important;
+    }
+
+    /* Größere Abstände und bessere Lesbarkeit für Noten-Überschriften */
+    .noten-header {
+        font-size: 1.15rem !important;
+        font-weight: bold !important;
+        color: #10b981 !important; /* Stylisches Grün für die Abgrenzung */
+        margin-top: 15px !important;
+        margin-bottom: 5px !important;
+        border-left: 3px solid #10b981;
+        padding-left: 8px;
     }
     </style>
     """,
@@ -100,7 +131,7 @@ def loesch_bestaetigung(fach_name):
 
 
 if st.session_state.active_subject is None:
-    st.title("🎓 Mein Notenrechner")
+    st.title("Mein Notenrechner")
 
     alle_schnitte = []
     for fach, daten in st.session_state.noten_buch.items():
@@ -111,12 +142,12 @@ if st.session_state.active_subject is None:
     if alle_schnitte:
         gesamtschnitt_aller_faecher = sum(alle_schnitte) / len(alle_schnitte)
         with st.container(border=True):
-            st.metric(label="📊 Aktueller Gesamtschnitt", value=f"{gesamtschnitt_aller_faecher:.2f}")
+            st.metric(label="Aktueller Gesamtschnitt", value=f"{gesamtschnitt_aller_faecher:.2f}")
     else:
         st.info("Trage in mindestens einem Fach Noten ein, um deinen Gesamtschnitt zu sehen.")
 
     st.markdown("---")
-    st.subheader("📚 Meine Fächer")
+    st.subheader("Meine Fächer")
 
     if not st.session_state.noten_buch:
         st.info("Noch keine Fächer angelegt. Erstelle dein erstes Fach weiter unten!")
@@ -133,7 +164,6 @@ if st.session_state.active_subject is None:
 
             if schnitt == 7.0:
                 anzeige_schnitt = "-.-"
-                emoji = "📖"
             else:
                 anzeige_schnitt = f"{schnitt:.2f}"
                 emoji = "⭐" if schnitt <= 2.0 else "📝"
@@ -187,14 +217,14 @@ else:
     st.markdown("---")
     col_titel, col_schnitt = st.columns([2, 1])
     with col_titel:
-        st.title(f"📖 {fach_name}")
+        st.title(f" {fach_name}")
         typ_text = "Hauptfach" if fach_daten["typ"] == "ja" else "Nebenfach"
         st.write(f"Fach-Typ: **{typ_text}**")
     with col_schnitt:
         st.metric(label="Aktueller Schnitt", value=anzeige_schnitt)
 
     st.markdown("---")
-    st.subheader("📝 Note hinzufügen")
+    st.subheader("Note hinzufügen")
 
     if fach_daten["typ"] == "ja":
         st.write("*Große Note hinzufügen (Schulaufgabe):*")
@@ -223,10 +253,10 @@ else:
                 st.rerun()
 
     st.markdown("---")
-    st.subheader("🛠️ Eingetragene Noten verwalten")
+    st.subheader("Eingetragene Noten verwalten")
 
     if fach_daten["typ"] == "ja":
-        st.write("**Große Noten:**")
+        st.markdown('<p class="noten-header">Große Noten :</p>', unsafe_allow_html=True)
         if not fach_daten["gross"]:
             st.info("Keine großen Noten eingetragen.")
         else:
@@ -237,7 +267,7 @@ else:
                     fach_daten["gross"].pop(index)
                     st.rerun()
 
-    st.write("**Kleine Noten:**")
+    st.markdown('<p class="noten-header">Kleine Noten :</p>', unsafe_allow_html=True)
     if not fach_daten["klein"]:
         st.info("Keine kleinen Noten eingetragen.")
     else:
@@ -249,6 +279,6 @@ else:
                 st.rerun()
 
     st.markdown("---")
-    st.markdown("##### ⚠️ Gefahrzone")
+    st.markdown("##### Achtung!")
     if st.button(f"Ganzes Fach '{fach_name}' unwiderruflich löschen", use_container_width=True, type="secondary"):
         loesch_bestaetigung(fach_name)
