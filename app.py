@@ -10,7 +10,6 @@ except Exception:
 # --- 1. TITEL & DESIGN ---
 st.set_page_config(page_title="Notenrechner", page_icon=app_icon, layout="centered")
 
-# CSS ohne Kommentare (verhindert Darstellungsfehler)
 st.markdown(
     """
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jonasfeneberg-sys/mein-notenrechner/main/logo.png">
@@ -66,10 +65,9 @@ st.markdown(
         background-color: #0f172a !important;
     }
 
-    /* Styling für die Notenkästen (Cards) */
     .note-card-gross {
         background-color: #1e293b !important;
-        border: 1px solid #3b82f6 !important; /* Blauer Rahmen für große Noten */
+        border: 1px solid #3b82f6 !important;
         border-radius: 12px;
         padding: 15px;
         margin-bottom: 15px;
@@ -77,7 +75,7 @@ st.markdown(
 
     .note-card-klein {
         background-color: #1e293b !important;
-        border: 1px solid #10b981 !important; /* Grüner Rahmen für kleine Noten */
+        border: 1px solid #10b981 !important;
         border-radius: 12px;
         padding: 15px;
         margin-bottom: 15px;
