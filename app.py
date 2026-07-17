@@ -10,7 +10,6 @@ st.set_page_config(page_title="Privater Notenrechner", page_icon=app_icon, layou
 
 st.markdown(
     """
-    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jonasfeneberg-sys/mein-notenrechner/main/logo.png">
     <style>
     .stApp {
         background-color: #0f172a !important;
