@@ -10,29 +10,69 @@ except Exception:
 # --- 1. TITEL & DESIGN ---
 st.set_page_config(page_title="Privater Notenrechner", page_icon=app_icon, layout="centered")
 
-# Safari Apple-Icon Trick
+# Safari Apple-Icon Trick & ECHTES DARK-THEME CSS
 st.markdown(
     """
-    <link rel="apple-touch-icon" href="https://github.com/jonasfeneberg-sys/mein-notenrechner/blob/4208bde4c2bbc19ad09e454dc951a29eccc25212/logo.png">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jonasfeneberg-sys/mein-notenrechner/main/logo.png">
+    <style>
+    /* 1. ERZWINGE DUNKLEN HINTERGRUND FÜR DIE GANZE APP */
+    .stApp {
+        background-color: #0f172a !important; /* Sehr dunkles Blau/Grau */
+        color: #f8fafc !important; /* Weißer Text */
+    }
+
+    /* Labels und Texte weiß färben */
+    p, span, label, .stMetric label {
+        color: #f8fafc !important;
+    }
+
+    /* 2. STYLING FÜR DIE KACHELN (DUNKLES DESIGN) */
+    div.stButton > button {
+        border-radius: 16px !important;
+        padding: 20px 15px !important;
+        font-weight: bold !important;
+        background-color: #1e293b !important; /* Etwas helleres Dunkelblau für Kacheln */
+        color: #f8fafc !important;
+        border: 1px solid #334155 !important;
+        transition: all 0.2s ease-in-out !important;
+        min-height: 100px !important;
+        white-space: pre-line !important; /* Erlaubt Zeilenumbrüche im Button */
+    }
+
+    /* Wenn man auf die Kacheln tippt */
+    div.stButton > button:hover, div.stButton > button:active, div.stButton > button:focus {
+        border-color: #10b981 !important; /* Grüner Rahmen bei Aktivierung */
+        background-color: #0f172a !important;
+        color: #10b981 !important;
+    }
+
+    /* Input-Felder an das dunkle Design anpassen */
+    div[data-baseweb="input"] input {
+        background-color: #1e293b !important;
+        color: #f8fafc !important;
+    }
+
+    /* Rahmen für Formularboxen anpassen */
+    div[data-testid="stForm"] {
+        border: 1px solid #334155 !important;
+        border-radius: 16px !important;
+        background-color: #0f172a !important;
+    }
+    </style>
     """,
     unsafe_allow_html=True
 )
 
+
 # --- NEUE FUNKTION: SCHNITTBERECHNUNG & SORTIER-WERT ---
 def get_schnitt_wert(fach_daten):
-    """
-    Berechnet den Schnitt für ein Fach.
-    Gibt die echte Note zurück oder 7.0, wenn keine Noten da sind.
-    """
-    grosse = fach_daten.get("gross", [])  # Angepasst an deinen Speicher ("gross")
-    kleine = fach_daten.get("klein", [])  # Angepasst an deinen Speicher ("klein")
+    grosse = fach_daten.get("gross", [])
+    kleine = fach_daten.get("klein", [])
     ist_hauptfach = fach_daten.get("typ") == "ja"
 
-    # Haben wir überhaupt Noten eingetragen?
     if not grosse and not kleine:
         return 7.0  # Fächer ohne Noten rutschen nach ganz hinten
 
-    # Gewichtung berechnen
     if ist_hauptfach:
         if grosse and kleine:
             schnitt_gross = sum(grosse) / len(grosse)
@@ -54,7 +94,8 @@ if "noten_buch" not in st.session_state:
 if "active_subject" not in st.session_state:
     st.session_state.active_subject = None
 
-# Lösch-Bestätigungs-Dialog
+
+# Lösch-Bestätigungs-Dialog (Gefahrzone)
 @st.dialog("Fach löschen?")
 def loesch_bestaetigung(fach_name):
     st.write(f"Bist du dir wirklich sicher, dass du das Fach *'{fach_name}'* mit allen Noten löschen willst?")
@@ -63,6 +104,7 @@ def loesch_bestaetigung(fach_name):
     with col_ja:
         if st.button("Ja, löschen", type="primary", use_container_width=True):
             del st.session_state.noten_buch[fach_name]
+            st.session_state.active_subject = None  # Zurücksetzen zur Übersicht nach dem Löschen
             st.toast(f"Fach '{fach_name}' wurde gelöscht!")
             st.rerun()
     with col_nein:
@@ -70,42 +112,14 @@ def loesch_bestaetigung(fach_name):
             st.rerun()
 
 
-# --- 3. BEREICH: NEUES FACH HINZUFÜGEN ---
-st.header("+ Neues Fach hinzufügen")
+# =====================================================================
+# ANSICHT 1: DAS DASHBOARD (Wenn kein Fach angeklickt ist)
+# =====================================================================
+if st.session_state.active_subject is None:
 
-with st.form("fach_formular", clear_on_submit=True):
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        neues_fach = st.text_input("Name des Fachs", placeholder="z. B. Mathe, Deutsch...")
-    with col2:
-        ist_hauptfach = st.radio("Fach-Typ:", ["Hauptfach", "Nebenfach"])
+    st.title("🎓 Mein Notenrechner")
 
-    submit_button = st.form_submit_button("Fach hinzufügen", use_container_width=True)
-
-if submit_button:
-    sauberer_name = neues_fach.strip()
-    if sauberer_name:
-        if sauberer_name in st.session_state.noten_buch:
-            st.error(f"Das Fach '{sauberer_name}' gibt es bereits!")
-        else:
-            typ = "ja" if ist_hauptfach == "Hauptfach" else "nein"
-            st.session_state.noten_buch[sauberer_name] = {
-                "typ": typ,
-                "gross": [],
-                "klein": []
-            }
-            st.success(f"Fach '{sauberer_name}' wurde hinzugefügt!")
-            st.rerun()
-    else:
-        st.warning("Bitte gib zuerst einen Namen für das Fach ein!")
-
-st.markdown("---")
-
-
-# --- 4. BEREICH: NOTEN EINTRAGEN & FÄCHER VERWALTEN ---
-if st.session_state.noten_buch:
-
-    # Gesamtschnitt-Berechnung über alle Fächer, die Noten haben
+    # 1. Gesamtschnitt berechnen und anzeigen
     alle_schnitte = []
     for fach, daten in st.session_state.noten_buch.items():
         schnitt = get_schnitt_wert(daten)
@@ -115,59 +129,146 @@ if st.session_state.noten_buch:
     if alle_schnitte:
         gesamtschnitt_aller_faecher = sum(alle_schnitte) / len(alle_schnitte)
         with st.container(border=True):
-            st.metric(label=" Aktueller Gesamtschnitt", value=f"{gesamtschnitt_aller_faecher:.2f}")
+            st.metric(label="📊 Aktueller Gesamtschnitt", value=f"{gesamtschnitt_aller_faecher:.2f}")
     else:
         st.info("Trage in mindestens einem Fach Noten ein, um deinen Gesamtschnitt zu sehen.")
 
     st.markdown("---")
 
-    st.header(" Noten eintragen & Fächer verwalten")
+    # 2. Die Kacheln der Fächer (Sortiert nach Schnitt)
+    st.subheader("📚 Meine Fächer")
 
-    # In der Auswahlbox sortieren wir die Namen der Übersicht halber einfach alphabetisch
-    facher_liste = sorted(list(st.session_state.noten_buch.keys()))
-    ausgewaehltes_fach = st.selectbox(
-        "Wähle ein Fach aus:",
-        options=facher_liste,
-        help="Wähle das Fach aus, für das du Noten eintragen oder löschen möchtest."
-    )
+    if not st.session_state.noten_buch:
+        st.info("Noch keine Fächer angelegt. Erstelle dein erstes Fach weiter unten!")
+    else:
+        # Fächer sortieren (Bester Schnitt zuerst)
+        sortierte_faecher = sorted(
+            st.session_state.noten_buch.items(),
+            key=lambda x: get_schnitt_wert(x[1])
+        )
 
-    fach_daten = st.session_state.noten_buch[ausgewaehltes_fach]
+        # Grid mit 2 Spalten für die Kacheln auf dem Handy
+        cols = st.columns(2)
+
+        for index, (fach_name, daten) in enumerate(sortierte_faecher):
+            col = cols[index % 2]  # Verteilt die Kacheln abwechselnd auf Spalte 1 und Spalte 2
+            schnitt = get_schnitt_wert(daten)
+
+            # "-.-" Trick für Fächer ohne Noten
+            if schnitt == 7.0:
+                anzeige_schnitt = "-.-"
+                emoji = "📖"
+            else:
+                anzeige_schnitt = f"{schnitt:.2f}"
+                emoji = "⭐" if schnitt <= 2.0 else "📝"
+
+            # Kachel-Beschriftung (Zweizeilig)
+            kachel_text = f"{emoji} {fach_name}\nSchnitt: {anzeige_schnitt}"
+
+            # Kachel zeichnen
+            with col:
+                if st.button(kachel_text, key=f"kachel_{fach_name}", use_container_width=True):
+                    st.session_state.active_subject = fach_name  # Setzt das aktive Fach
+                    st.rerun()  # Lädt die App neu und öffnet die Detailansicht!
+
+    st.markdown("---")
+
+    # 3. Neues Fach hinzufügen Formular
+    st.subheader("➕ Neues Fach hinzufügen")
+    with st.form("fach_formular", clear_on_submit=True):
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            neues_fach = st.text_input("Name des Fachs", placeholder="z. B. Mathe, Deutsch...")
+        with col2:
+            ist_hauptfach = st.radio("Fach-Typ:", ["Hauptfach", "Nebenfach"])
+
+        submit_button = st.form_submit_button("Fach hinzufügen", use_container_width=True)
+
+    if submit_button:
+        sauberer_name = neues_fach.strip()
+        if sauberer_name:
+            if sauberer_name in st.session_state.noten_buch:
+                st.error(f"Das Fach '{sauberer_name}' gibt es bereits!")
+            else:
+                typ = "ja" if ist_hauptfach == "Hauptfach" else "nein"
+                st.session_state.noten_buch[sauberer_name] = {
+                    "typ": typ,
+                    "gross": [],
+                    "klein": []
+                }
+                st.success(f"Fach '{sauberer_name}' wurde hinzugefügt!")
+                st.rerun()
+        else:
+            st.warning("Bitte gib zuerst einen Namen für das Fach ein!")
+
+
+# =====================================================================
+# ANSICHT 2: DIE DETAILANSICHT (Wenn ein Fach angeklickt wurde)
+# =====================================================================
+else:
+    fach_name = st.session_state.active_subject
+    fach_daten = st.session_state.noten_buch[fach_name]
+    schnitt = get_schnitt_wert(fach_daten)
+    anzeige_schnitt = "-.-" if schnitt == 7.0 else f"{schnitt:.2f}"
+
+    # 1. ZURÜCK BUTTON GANZ OBEN
+    if st.button("⬅ Zurück zur Übersicht", use_container_width=True):
+        st.session_state.active_subject = None
+        st.rerun()
+
+    st.markdown("---")
+
+    # Header der Detailansicht
+    col_titel, col_schnitt = st.columns([2, 1])
+    with col_titel:
+        st.title(f"📖 {fach_name}")
+        typ_text = "Hauptfach" if fach_daten["typ"] == "ja" else "Nebenfach"
+        st.write(f"Fach-Typ: **{typ_text}**")
+    with col_schnitt:
+        st.metric(label="Aktueller Schnitt", value=anzeige_schnitt)
+
+    st.markdown("---")
+
+    # 2. Noten eintragen per Klick
+    st.subheader("📝 Note hinzufügen")
 
     if fach_daten["typ"] == "ja":
-        st.info(f"'{ausgewaehltes_fach}' ist ein Hauptfach. Klicke auf eine Note, um sie direkt hinzuzufügen.")
         st.write("*Große Note hinzufügen (Schulaufgabe):*")
         cols_g = st.columns(6)
         for note_wert in range(1, 7):
-            if cols_g[note_wert - 1].button(f"*{note_wert}*", key=f"btn_g_{note_wert}", use_container_width=True):
+            if cols_g[note_wert - 1].button(f"*{note_wert}*", key=f"detail_g_{note_wert}", use_container_width=True):
                 fach_daten["gross"].append(note_wert)
                 st.success(f"Große Note {note_wert} hinzugefügt!")
                 st.rerun()
 
-        st.write("")
-        st.write("*Kleine Note hinzufügen (Ex/Abfrage/mündliche Noten):*")
+        st.write("")  # Abstand
+
+        st.write("*Kleine Note hinzufügen (Ex/Abfrage/Mündlich):*")
         cols_k = st.columns(6)
         for note_wert in range(1, 7):
-            if cols_k[note_wert - 1].button(f"*{note_wert}*", key=f"btn_kh_{note_wert}", use_container_width=True):
+            if cols_k[note_wert - 1].button(f"*{note_wert}*", key=f"detail_k_{note_wert}", use_container_width=True):
                 fach_daten["klein"].append(note_wert)
                 st.success(f"Kleine Note {note_wert} hinzugefügt!")
                 st.rerun()
     else:
-        st.info(f"'{ausgewaehltes_fach}' ist ein Nebenfach. Klicke auf eine Note, um sie direkt hinzuzufügen.")
+        # Nebenfach (nur kleine Noten)
         st.write("*Kleine Note hinzufügen:*")
         cols_n = st.columns(6)
         for note_wert in range(1, 7):
-            if cols_n[note_wert - 1].button(f"*{note_wert}*", key=f"btn_kn_{note_wert}", use_container_width=True):
+            if cols_n[note_wert - 1].button(f"*{note_wert}*", key=f"detail_n_{note_wert}", use_container_width=True):
                 fach_daten["klein"].append(note_wert)
-                st.success(f"Kleine Note {note_wert} hinzugefügt!")
+                st.success(f"Note {note_wert} hinzugefügt!")
                 st.rerun()
 
     st.markdown("---")
-    st.write("### Aktuelle Noten verwalten:")
+
+    # 3. Eingetragene Noten verwalten & löschen
+    st.subheader("🛠️ Eingetragene Noten verwalten")
 
     if fach_daten["typ"] == "ja":
-        st.write("*Große Noten:*")
+        st.write("**Große Noten:**")
         if not fach_daten["gross"]:
-            st.error("Keine großen Noten eingetragen.")
+            st.info("Keine großen Noten eingetragen.")
         else:
             for index, note in enumerate(fach_daten["gross"]):
                 col_n, col_del = st.columns([4, 1])
@@ -176,9 +277,9 @@ if st.session_state.noten_buch:
                     fach_daten["gross"].pop(index)
                     st.rerun()
 
-    st.write("*Kleine Noten:*")
+    st.write("**Kleine Noten:**")
     if not fach_daten["klein"]:
-        st.error("Keine kleinen Noten eingetragen.")
+        st.info("Keine kleinen Noten eingetragen.")
     else:
         for index, note in enumerate(fach_daten["klein"]):
             col_n, col_del = st.columns([4, 1])
@@ -187,30 +288,9 @@ if st.session_state.noten_buch:
                 fach_daten["klein"].pop(index)
                 st.rerun()
 
-    st.markdown("##### Gefahrzone:")
-    if st.button(f" Ganzes Fach '{ausgewaehltes_fach}' löschen", use_container_width=True):
-        loesch_bestaetigung(ausgewaehltes_fach)
+    st.markdown("---")
 
-
-    # --- 5. BEREICH: DIE AUSWERTUNG (Vom besten zum schlechtesten Fach sortiert) ---
-    st.header(" Deine aktuellen Notenschnitte")
-
-    # HIER SORTIEREN WIR DIE FÄCHER NACH IHREM SCHNITT
-    sortierte_faecher = sorted(
-        st.session_state.noten_buch.items(),
-        key=lambda x: get_schnitt_wert(x[1])
-    )
-
-    # Jetzt gehen wir die Liste der Reihe nach durch
-    for fach, daten in sortierte_faecher:
-        schnitt = get_schnitt_wert(daten)
-
-        if schnitt == 7.0:
-            # Rote Meldung für Fächer ohne Noten ganz unten
-            st.error(f"Für {fach} wurden noch keine Noten eingetragen. Schnitt: -.-")
-        else:
-            # Schicke grüne/blaue Box für berechnete Schnitte
-            st.metric(label=f"Schnitt {fach}", value=f"{schnitt:.2f}")
-
-else:
-    st.info("Füge oben dein erstes Fach hinzu, um mit der Noteneingabe zu starten!")
+    # 4. Gefahrzone (Ganzes Fach löschen)
+    st.markdown("##### ⚠️ Gefahrzone")
+    if st.button(f"Ganzes Fach '{fach_name}' unwiderruflich löschen", use_container_width=True, type="secondary"):
+        loesch_bestaetigung(fach_name)
