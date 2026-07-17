@@ -1,18 +1,20 @@
 import streamlit as st
 from PIL import Image
 
+# --- BILD / LOGO LADEN ---
 try:
     app_icon = Image.open("logo.png")
 except Exception:
     app_icon = "🎓"
 
+# --- 1. TITEL & DESIGN ---
 st.set_page_config(page_title="Privater Notenrechner", page_icon=app_icon, layout="centered")
 
+# Safari Apple-Icon Trick & ECHTES DARK-THEME CSS (Absolut fehlerfrei ohne Kommentare)
 st.markdown(
     """
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/jonasfeneberg-sys/mein-notenrechner/main/logo.png">
     <style>
-    /* 1. ERZWINGE DUNKLEN HINTERGRUND FÜR DIE GANZE APP */
     .stApp {
         background-color: #0f172a !important;
         color: #f8fafc !important;
@@ -22,11 +24,9 @@ st.markdown(
         color: #f8fafc !important;
     }
 
-    /* 2. NUR DIE DASHBOARD-KACHELN GROSS MACHEN */
-    /* Wir nutzen den Selektor für Buttons, die das Wort "Schnitt" oder Emoji im Text haben */
-    div.stButton > button[class*=""] {
+    div.stButton > button {
         border-radius: 12px !important;
-        padding: 8px 12px !important; /* Standardmäßig viel flacher und kompakter */
+        padding: 8px 12px !important;
         font-weight: bold !important;
         background-color: #1e293b !important;
         color: #f8fafc !important;
@@ -34,15 +34,12 @@ st.markdown(
         transition: all 0.2s ease-in-out !important;
     }
 
-    /* Targeten der Fächer-Buttons auf dem Dashboard für das große Kachel-Aussehen */
     div[data-testid="stHorizontalBlock"] div.stButton > button {
         padding: 20px 15px !important;
-        min-height: 85px !important; /* Etwas weniger hoch als vorher, damit es kompakter wirkt */
+        min-height: 85px !important;
         white-space: pre-line !important;
     }
 
-    /* 3. DIE MÜLLEIMER-BUTTONS ULTRA COMPACT MACHEN */
-    /* Verhindert, dass die Löschbuttons riesig werden */
     div.stColumn div.stButton > button {
         min-height: 32px !important;
         height: 32px !important;
@@ -69,11 +66,10 @@ st.markdown(
         background-color: #0f172a !important;
     }
 
-    /* Größere Abstände und bessere Lesbarkeit für Noten-Überschriften */
     .noten-header {
         font-size: 1.15rem !important;
         font-weight: bold !important;
-        color: #10b981 !important; /* Stylisches Grün für die Abgrenzung */
+        color: #10b981 !important;
         margin-top: 15px !important;
         margin-bottom: 5px !important;
         border-left: 3px solid #10b981;
@@ -85,6 +81,7 @@ st.markdown(
 )
 
 
+# --- FUNKTION: SCHNITTBERECHNUNG ---
 def get_schnitt_wert(fach_daten):
     grosse = fach_daten.get("gross", [])
     kleine = fach_daten.get("klein", [])
@@ -108,12 +105,14 @@ def get_schnitt_wert(fach_daten):
         return 7.0
 
 
+# --- 2. SPEICHER INITIALISIEREN ---
 if "noten_buch" not in st.session_state:
     st.session_state.noten_buch = {}
 if "active_subject" not in st.session_state:
     st.session_state.active_subject = None
 
 
+# Lösch-Bestätigung
 @st.dialog("Fach löschen?")
 def loesch_bestaetigung(fach_name):
     st.write(f"Bist du dir wirklich sicher, dass du das Fach *'{fach_name}'* mit allen Noten löschen willst?")
@@ -130,9 +129,14 @@ def loesch_bestaetigung(fach_name):
             st.rerun()
 
 
+# =====================================================================
+# ANSICHT 1: DAS DASHBOARD
+# =====================================================================
 if st.session_state.active_subject is None:
-    st.title("Mein Notenrechner")
 
+    st.title(" Mein Notenrechner")
+
+    # Gesamtschnitt berechnen
     alle_schnitte = []
     for fach, daten in st.session_state.noten_buch.items():
         schnitt = get_schnitt_wert(daten)
@@ -142,16 +146,17 @@ if st.session_state.active_subject is None:
     if alle_schnitte:
         gesamtschnitt_aller_faecher = sum(alle_schnitte) / len(alle_schnitte)
         with st.container(border=True):
-            st.metric(label="Aktueller Gesamtschnitt", value=f"{gesamtschnitt_aller_faecher:.2f}")
+            st.metric(label=" Aktueller Gesamtschnitt", value=f"{gesamtschnitt_aller_faecher:.2f}")
     else:
         st.info("Trage in mindestens einem Fach Noten ein, um deinen Gesamtschnitt zu sehen.")
 
     st.markdown("---")
-    st.subheader("Meine Fächer")
+    st.subheader(" Meine Fächer")
 
     if not st.session_state.noten_buch:
         st.info("Noch keine Fächer angelegt. Erstelle dein erstes Fach weiter unten!")
     else:
+        # Fächer sortieren (Bester Schnitt zuerst)
         sortierte_faecher = sorted(
             st.session_state.noten_buch.items(),
             key=lambda x: get_schnitt_wert(x[1])
@@ -162,8 +167,10 @@ if st.session_state.active_subject is None:
             col = cols[index % 2]
             schnitt = get_schnitt_wert(daten)
 
+            # Hier definieren wir die Variablen sauber VOR der Button-Erstellung
             if schnitt == 7.0:
                 anzeige_schnitt = "-.-"
+                emoji = "📖"
             else:
                 anzeige_schnitt = f"{schnitt:.2f}"
                 emoji = "⭐" if schnitt <= 2.0 else "📝"
@@ -176,7 +183,7 @@ if st.session_state.active_subject is None:
                     st.rerun()
 
     st.markdown("---")
-    st.subheader("➕ Neues Fach hinzufügen")
+    st.subheader(" Neues Fach hinzufügen")
     with st.form("fach_formular", clear_on_submit=True):
         col1, col2 = st.columns([2, 1])
         with col1:
@@ -204,6 +211,9 @@ if st.session_state.active_subject is None:
             st.warning("Bitte gib zuerst einen Namen für das Fach ein!")
 
 
+# =====================================================================
+# ANSICHT 2: DIE DETAILANSICHT
+# =====================================================================
 else:
     fach_name = st.session_state.active_subject
     fach_daten = st.session_state.noten_buch[fach_name]
@@ -217,14 +227,14 @@ else:
     st.markdown("---")
     col_titel, col_schnitt = st.columns([2, 1])
     with col_titel:
-        st.title(f" {fach_name}")
+        st.title(f"{fach_name}")
         typ_text = "Hauptfach" if fach_daten["typ"] == "ja" else "Nebenfach"
         st.write(f"Fach-Typ: **{typ_text}**")
     with col_schnitt:
         st.metric(label="Aktueller Schnitt", value=anzeige_schnitt)
 
     st.markdown("---")
-    st.subheader("Note hinzufügen")
+    st.subheader(" Note hinzufügen")
 
     if fach_daten["typ"] == "ja":
         st.write("*Große Note hinzufügen (Schulaufgabe):*")
@@ -256,7 +266,7 @@ else:
     st.subheader("Eingetragene Noten verwalten")
 
     if fach_daten["typ"] == "ja":
-        st.markdown('<p class="noten-header">Große Noten :</p>', unsafe_allow_html=True)
+        st.markdown('<p class="noten-header">Große Noten (Schulaufgaben):</p>', unsafe_allow_html=True)
         if not fach_daten["gross"]:
             st.info("Keine großen Noten eingetragen.")
         else:
@@ -267,7 +277,7 @@ else:
                     fach_daten["gross"].pop(index)
                     st.rerun()
 
-    st.markdown('<p class="noten-header">Kleine Noten :</p>', unsafe_allow_html=True)
+    st.markdown('<p class="noten-header">Kleine Noten:</p>', unsafe_allow_html=True)
     if not fach_daten["klein"]:
         st.info("Keine kleinen Noten eingetragen.")
     else:
